@@ -9,7 +9,14 @@ mkdir -p /etc/ssl/caddy
 chown -R www-data:root /etc/ssl/caddy
 chmod 770 /etc/ssl/caddy
 touch /etc/caddy/Caddyfile
-mkdir -p /var/www/{dl,cloud}.squadrasec.com/html
+
+echo "What is your domain name FQDN?"
+read domain
+
+echo "If you want TLS secure connection to be enabled give your email address here!"
+read email
+
+mkdir -p /var/www/{dl,cloud}.$domain/html
 chown www-data:www-data /var/www
 chmod 755 /var/www
 sudo wget https://raw.githubusercontent.com/mholt/caddy/master/dist/init/linux-systemd/caddy.service
@@ -23,28 +30,28 @@ CFILE="/etc/caddy/Caddyfile"
 
 /bin/cat <<EOM >$CFILE
 
-squadrasec.com {
-    redir https://www.squadrasec.com{uri}
+$domain {
+    redir https://www.$domain{uri}
 }
 
-https://www.squadrasec.com {
+https://www.$domain {
 
 redir 301 {
 	if {>X-Forwarded-Proto} is http
 	/  https://{host}{uri}
 }
 
-    tls pboerman2897@outlook.com
+    tls $email
     proxy / 127.0.0.1:2368 {
         websocket
     }
 }
 
-cloud.squadrasec.com {
-    redir https://www.cloud.squadrasec.com{uri}
+cloud.$domain {
+    redir https://www.cloud.$domain{uri}
 }
 
-https://www.cloud.squadrasec.com {
+https://www.cloud.$domain {
 
 redir 301 {
 	if {>X-Forwarded-Proto} is http
@@ -52,8 +59,8 @@ redir 301 {
 }
 	
 	gzip
-	tls    pboerman2897@outlook.com
-	root   /var/www/nextcloud
+	tls    $email
+	root   /var/www/cloud.$domain/html
 	log    /var/log/nextcloud_access.log
 	errors /var/log/nextcloud_errors.log
 
